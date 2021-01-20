@@ -1,71 +1,11 @@
 #include "pch.h"
 #include "SA2ModLoader.h"
-#include "alo_energyfruit.h"
-#include "alo_peacefruit.h"
+#include <string>
+#include "ModelInfo.h"
+
 extern "C"
 {
-	NJS_TEXNAME  AL_OBJECT_DC_TEXNAME[88];
-	NJS_TEXLIST AL_OBJECT_DC_TEXLIST = { arrayptrandlength(AL_OBJECT_DC_TEXNAME) };
-
-	ChaoItemStats GenericStats = { 0,0,0,0,0,0,40,0 };
-	struct ItemChance
-	{
-		Sint8 item;
-		Sint8 chance;
-	};
-	int EnergyFruitID;
-	int PeaceFruitID;
-
-	int (*RegisterChaoFruit)(NJS_OBJECT* model, NJS_TEXLIST* texlist, ChaoItemStats* stats, void* attrib, void* Func, const char* name, const char* description);
-	void (*RegisterDataFunc)(void* ptr);
-	void (*RegisterBlackMarketRareFruit)(ItemChance* chance);
-	void (*RegisterChaoTexlistLoad)(const char* name, NJS_TEXLIST* load);
-
-	void __cdecl EnergyFruitFunc(ChaoData* data, ObjectMaster* fruit)
-	{
-		//technically you dont need to check for this but im doing it just to be sure
-		if (fruit->Data1.Entity->Rotation.x == EnergyFruitID)
-		{
-			//kinda unorthodox to do it like this, you would need to use addemotion but i dont wanna clutter this project with a lot of function pointers and shit
-			//you can look at addemotion on CWE source (if it ever gets released)
-			data->data.Emotion.Normal_Curiosity += 10;
-			if (data->data.Emotion.Normal_Curiosity > 100)
-				data->data.Emotion.Normal_Curiosity = 100;
-
-			data->data.Emotion.CryBaby_Energetic += 10;
-			if (data->data.Emotion.CryBaby_Energetic > 100)
-				data->data.Emotion.CryBaby_Energetic = 100;
-
-			data->data.Emotion.Normal_Carefree -= 10;
-			if (data->data.Emotion.Normal_Carefree < -100)
-				data->data.Emotion.Normal_Carefree = -100;
-
-			data->data.Emotion.Naive_Normal -= 10;
-			if (data->data.Emotion.Naive_Normal < -100)
-				data->data.Emotion.Naive_Normal = -100;
-		}
-	}
-	void __cdecl PeaceFruitFunc(ChaoData* data, ObjectMaster* fruit)
-	{
-		if(fruit->Data1.Entity->Rotation.x == PeaceFruitID)
-		{ 
-			data->data.Emotion.Normal_Curiosity -= 10;
-			if (data->data.Emotion.Normal_Curiosity < -100) 
-				data->data.Emotion.Normal_Curiosity = -100;
-
-			data->data.Emotion.CryBaby_Energetic -= 10;
-			if (data->data.Emotion.CryBaby_Energetic < -100)
-				data->data.Emotion.CryBaby_Energetic = -100;
-
-			data->data.Emotion.Normal_Carefree += 10;
-			if (data->data.Emotion.Normal_Carefree > 100)
-				data->data.Emotion.Normal_Carefree = 100;
-
-			data->data.Emotion.Naive_Normal += 10;
-			if (data->data.Emotion.Naive_Normal > 100)
-				data->data.Emotion.Naive_Normal = 100;
-		}
-	}
+	//Non-SA2B structs - Need to be added for CWE purposes.
 	struct BlackMarketItemAttributes
 	{
 		int PurchasePrice;
@@ -75,32 +15,79 @@ extern "C"
 		__int16 Descriptions;
 		__int16 Unknown;
 	};
-	const char* EnergyFruitStr = "Energy Fruit";
-	const char* EnergyFruitDesc = "Makes Chao active.";
-	const char* PeaceFruitStr = "Peace Fruit";
-	const char* PeaceFruitDesc = "Makes Chao relaxed.";
-	BlackMarketItemAttributes EnergyFruit = { 3000, 1000, 0, -1, -1, 0 };
-	BlackMarketItemAttributes PeaceFruit = { 3000, 1000, 0, -1, -1, 0 };
+
+	struct ItemChance
+	{
+		Sint8 item;
+		Sint8 chance;
+	};
+
+	//NINJA types - Texture name and textlist (derives from texture name)
+	NJS_TEXNAME texname_CUSTOMFRUIT[88];
+	NJS_TEXLIST texlist_CUSTOMFRUIT = { arrayptrandlength(texname_CUSTOMFRUIT) };
+
+	//Chao Fruit ID - Initialize to start the process.
+	int DragonFruitID;
+
+	std::string pathStr;
+
+
+	//registration functions - Handles registering the Chao Fruit to certain locations.  Rare fruit are handled like mushrooms, while general fruit are handled like shape fruit.
+	int (*RegisterChaoFruit)(NJS_OBJECT* model, NJS_TEXLIST* texlist, ChaoItemStats* stats, void* attrib, void* Func, const char* name, const char* description);
+	void (*RegisterDataFunc)(void* ptr);
+	void (*RegisterBlackMarketGeneralFruit)(ItemChance* chance);
+	void (*RegisterBlackMarketRareFruit)(ItemChance* chance);
+	void (*RegisterChaoTexlistLoad)(const char* name, NJS_TEXLIST* load);
+
+	ChaoItemStats DragonFruitStats = { 10,10,0,0,0,0,50,0,0,0 }; //mood, belly, swim, fly, run, power, stamina, luck, intel, unknown;
+
+	//make a function for each fruit you add - gets called in RegisterFruit
+	void __cdecl DragonFruitFunc(ChaoData* data, ObjectMaster* fruit)
+	{
+		// data->data(data1) has some interesting functions that you can have a look at - See Intellisense update for more information.
+	}
+
+	// copied from Hat mod code.
+	int RegisterFruit(const char* path, int rings, int sellPrice, ChaoItemStats stats, void *func, const char* name, const char* desc)
+	{
+		BlackMarketItemAttributes attrib = { rings, sellPrice, 0, -1, -1, 0 };
+		std::string finalPath = pathStr + "\\" + path;
+		ModelInfo* file = new ModelInfo(finalPath);
+		return RegisterChaoFruit(file->getmodel(), &texlist_CUSTOMFRUIT, &stats, &attrib, func, name, desc);
+	}
+
+	//Black Market Registration
+	BlackMarketItemAttributes DragonFruit = { 1000, 250, 0, -1, -1, 0 };
+
 	void CWELoad()
 	{
-		RegisterChaoTexlistLoad("AL_OBJECT_DC", &AL_OBJECT_DC_TEXLIST);
+		//Texture list - Change the name for making different custom textures.
+		RegisterChaoTexlistLoad("customfruit", &texlist_CUSTOMFRUIT);
+		
+		//Register the fruit ID to the fruit list - should start at 34 before DCFruits gets initialized, or 36 after.
+		DragonFruitID = RegisterFruit("dragonfruit.sa2mdl", 1000, 250, DragonFruitStats,DragonFruitFunc,"Dragonfruit","A sweet delicacy");
+		
+		//give the fruit a chance to spawn, 50% is standard in DCFruits
+		ItemChance dragonfruitChance{ DragonFruitID, 50 };
+		
+		//Register the fruit
+		RegisterBlackMarketGeneralFruit(&dragonfruitChance);
 
-		EnergyFruitID = RegisterChaoFruit(&object_00103880, &AL_OBJECT_DC_TEXLIST, &GenericStats, &EnergyFruit, EnergyFruitFunc, EnergyFruitStr, EnergyFruitDesc);
-		PeaceFruitID = RegisterChaoFruit(&object_00104BA8, &AL_OBJECT_DC_TEXLIST, &GenericStats, &PeaceFruit, PeaceFruitFunc, PeaceFruitStr, PeaceFruitDesc);
-		ItemChance eFruitChance = { EnergyFruitID, 50 };
-		ItemChance pFruitChance = { PeaceFruitID, 50 };
-		RegisterBlackMarketRareFruit(&eFruitChance);
-		RegisterBlackMarketRareFruit(&pFruitChance);
 	}
-	__declspec(dllexport) void Init()
+	__declspec(dllexport) void Init(const char* path)
 	{
+		//IMPORTANT - ASSIGN THIS OTHERWISE THE IMPORT MODEL WON'T WORK!
+		pathStr = std::string(path);
+
 		HMODULE h = GetModuleHandle(L"CWE");
-		RegisterChaoFruit = (int (*)(NJS_OBJECT * model, NJS_TEXLIST * texlist, ChaoItemStats * stats, void* attrib, void*, const char*, const char*))GetProcAddress(h, "RegisterChaoFruit");
+		RegisterChaoFruit = (int (*)(NJS_OBJECT * model, NJS_TEXLIST * texlist, ChaoItemStats * stats, void* attrib, void* Func, const char*, const char*))GetProcAddress(h, "RegisterChaoFruit");
 		RegisterDataFunc = (void (*)(void* ptr))GetProcAddress(h, "RegisterDataFunc");
+		RegisterBlackMarketGeneralFruit = (void (*)(ItemChance * chance))GetProcAddress(h, "RegisterBlackMarketGeneralFruit");
 		RegisterBlackMarketRareFruit = (void (*)(ItemChance * chance))GetProcAddress(h, "RegisterBlackMarketRareFruit");
 		RegisterChaoTexlistLoad = (void (*)(const char* name, NJS_TEXLIST * load))GetProcAddress(h, "RegisterChaoTexlistLoad");
-			
+
 		RegisterDataFunc(CWELoad);
 	}
 	__declspec(dllexport) ModInfo SA2ModInfo = { ModLoaderVer };
 }
+
