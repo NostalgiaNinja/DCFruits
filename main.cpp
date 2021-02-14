@@ -27,7 +27,7 @@ extern "C"
 	NJS_TEXLIST texlist_CUSTOMFRUIT = {arrayptrandlength(texname_CUSTOMFRUIT)};
 
 	//Chao Fruit ID - Initialize to start the process.
-	int DragonFruitID;
+	int ExampleFruitID;
 
 	std::string pathStr;
 
@@ -64,13 +64,13 @@ extern "C"
 		RegisterChaoTexlistLoad("examplefruit", &texlist_CUSTOMFRUIT);
 
 		//Register the fruit ID to the fruit list - should start at 34 before DCFruits gets initialized, or 36 after.
-		DragonFruitID = RegisterFruit("example.sa2mdl", 1000, 250, ExampleFruitStats, ExampleFruitFunc, "Example Fruit", "Example fruit description");
+		ExampleFruitID = RegisterFruit("example.sa2mdl", 1000, 250, ExampleFruitStats, ExampleFruitFunc, "Example Fruit", "Example fruit description");
 
 		//give the fruit a chance to spawn, 50% is standard in DCFruits
-		ItemChance dragonfruitChance{DragonFruitID, 50};
+		ItemChance ExampleFruitChance{ExampleFruitID, 50};
 
 		//Register the fruit
-		RegisterBlackMarketGeneralFruit(&dragonfruitChance);
+		RegisterBlackMarketGeneralFruit(&ExampleFruitChance);
 	}
 	__declspec(dllexport) void Init(const char *path)
 	{
