@@ -55,9 +55,6 @@ extern "C"
 		return RegisterChaoFruit(file->getmodel(), &texlist_CUSTOMFRUIT, &stats, &attrib, func, name, desc);
 	}
 
-	//Black Market Registration
-	BlackMarketItemAttributes ExampleFruit = {1000, 250, 0, -1, -1, 0};
-
 	void CWELoad()
 	{
 		//Texture list - Change the name for making different custom textures.
