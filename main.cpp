@@ -56,7 +56,7 @@ extern "C"
 	}
 
 	//Black Market Registration
-	BlackMarketItemAttributes DragonFruit = {1000, 250, 0, -1, -1, 0};
+	BlackMarketItemAttributes ExampleFruit = {1000, 250, 0, -1, -1, 0};
 
 	void CWELoad()
 	{
