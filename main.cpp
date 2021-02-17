@@ -71,7 +71,6 @@ extern "C"
 	}
 	__declspec(dllexport) void Init(const char *path)
 	{
-		//IMPORTANT - ASSIGN THIS OTHERWISE THE IMPORT MODEL WON'T WORK!
 		pathStr = std::string(path);
 
 		HMODULE h = GetModuleHandle(L"CWE");
